@@ -33,6 +33,12 @@ namespace SAM.Picker
         public string Type;
         public int ImageIndex;
 
+        /// <summary>Total achievements from the local stats schema, -1 when unknown.</summary>
+        public int TotalAchievements = -1;
+
+        /// <summary>Unlocked achievements from the local user stats cache, -1 when unknown.</summary>
+        public int UnlockedAchievements = -1;
+
         public string Name
         {
             get => this._Name;

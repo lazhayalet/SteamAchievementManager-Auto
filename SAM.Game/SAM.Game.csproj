@@ -4,19 +4,19 @@
     <Company>Gibbed</Company>
     <Authors>Gibbed</Authors>
     <Description>A manager for game achievements in Steam.</Description>
-    <Copyright>Copyright © Gibbed 2019</Copyright>
+    <Copyright>Copyright ï¿½ Gibbed 2019</Copyright>
   </PropertyGroup>
   <PropertyGroup>
-    <Version>8.0.0</Version>
-    <AssemblyVersion>8.0.0.0</AssemblyVersion>
-    <FileVersion>8.0.0.0</FileVersion>
+    <Version>9.0.0</Version>
+    <AssemblyVersion>9.0.0.0</AssemblyVersion>
+    <FileVersion>9.0.0.0</FileVersion>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Blank.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <PropertyGroup>
-    <RepositoryUrl>https://github.com/gibbed/SteamAchievementManager/</RepositoryUrl>
+    <RepositoryUrl>https://github.com/lazhayalet/SteamAchievementManager-Auto/</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
   </PropertyGroup>
   <PropertyGroup>
@@ -35,6 +35,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\SAM.Common\GhostTheme.cs">
+      <Link>GhostTheme.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Compile Update="DoubleBufferedListView.cs">

@@ -30,9 +30,13 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.XPath;
 using static SAM.Picker.InvariantShorthand;
+using SAM.Common;
+using SAM.Picker.FreeGames;
 using APITypes = SAM.API.Types;
 
 namespace SAM.Picker
@@ -51,6 +55,19 @@ namespace SAM.Picker
 
         private readonly API.Callbacks.AppDataChanged _AppDataChangedCallback;
 
+        private enum SortMode
+        {
+            Name,
+            LockedFirst,
+            UnlockedFirst,
+        }
+
+        private SortMode _sortMode = SortMode.Name;
+        private FreeGamesForm _freeGamesForm;
+        private readonly ManualResetEventSlim _unlockPauseEvent = new(true); // signaled = running
+        private int _unlockCompletedCount;
+        private int _unlockTotalCount;
+
         public GamePicker(API.Client client)
         {
             this._Games = new();
@@ -62,20 +79,217 @@ namespace SAM.Picker
 
             this.InitializeComponent();
 
-            Bitmap blank = new(this._LogoImageList.ImageSize.Width, this._LogoImageList.ImageSize.Height);
-            using (var g = Graphics.FromImage(blank))
-            {
-                g.Clear(Color.DimGray);
-            }
-
-            this._LogoImageList.Images.Add("Blank", blank);
+            this.RebuildBlankLogo();
 
             this._SteamClient = client;
+
+            this.ReapplyTheme();
+            Lang.Changed += this.ApplyLanguage;
+            this.ApplyLanguage();
+            this.FormClosed += (_, _) => Lang.Changed -= this.ApplyLanguage;
 
             this._AppDataChangedCallback = client.CreateAndRegisterCallback<API.Callbacks.AppDataChanged>();
             this._AppDataChangedCallback.OnRun += this.OnAppDataChanged;
 
             this.AddGames();
+        }
+
+        private void ApplyLanguage()
+        {
+            this.Text = Lang.T("picker.title");
+            this._RefreshGamesButton.Text = Lang.T("picker.refresh");
+            this._AddGameButton.Text = Lang.T("picker.addGame");
+            this._UnlockAllButton.Text = Lang.T("picker.unlockAll");
+            this._UnlockSelectedButton.Text = Lang.T("picker.unlockSelected");
+            this._FreeGamesButton.Text = Lang.T("picker.freeGames");
+            this._FindGamesLabel.Text = Lang.T("picker.filter");
+            this._FilterGamesMenuItem.Text = Lang.T("picker.showGames");
+            this._FilterDemosMenuItem.Text = Lang.T("picker.showDemos");
+            this._FilterModsMenuItem.Text = Lang.T("picker.showMods");
+            this._FilterJunkMenuItem.Text = Lang.T("picker.showJunk");
+            this._SortDropDown.Text = Lang.T("picker.sort");
+            this._SortNameItem.Text = Lang.T("picker.sortName");
+            this._SortLockedFirstItem.Text = Lang.T("picker.sortLockedFirst");
+            this._SortUnlockedFirstItem.Text = Lang.T("picker.sortUnlockedFirst");
+            this._PauseUnlockButton.Text = this._unlockPauseEvent.IsSet == true
+                ? Lang.T("picker.pause")
+                : Lang.T("picker.resume");
+            this._StopUnlockButton.Text = Lang.T("picker.stop");
+            this._ThemeDropDown.Text = Lang.T("picker.theme");
+            this._ThemeDarkItem.Text = Lang.T("picker.themeDark");
+            this._ThemeLightItem.Text = Lang.T("picker.themeLight");
+            this._LangTurkishItem.Checked = Lang.Current == Lang.Turkish;
+            this._LangEnglishItem.Checked = Lang.Current == Lang.English;
+
+            if (this._Games.Count > 0)
+            {
+                this._PickerStatusLabel.Text = Lang.F(
+                    "picker.displaying",
+                    this._GameListView.Items.Count,
+                    this._Games.Count);
+            }
+        }
+
+        private void OnLangTurkish(object sender, EventArgs e)
+        {
+            Lang.SetLanguage(Lang.Turkish);
+        }
+
+        private void OnLangEnglish(object sender, EventArgs e)
+        {
+            Lang.SetLanguage(Lang.English);
+        }
+
+        private void OnThemeDark(object sender, EventArgs e)
+        {
+            this.SetThemeMode(GhostMode.Dark);
+        }
+
+        private void OnThemeLight(object sender, EventArgs e)
+        {
+            this.SetThemeMode(GhostMode.Light);
+        }
+
+        private void SetThemeMode(GhostMode mode)
+        {
+            Lang.SetTheme(mode == GhostMode.Dark ? "dark" : "light");
+            GhostTheme.SetMode(mode); // raises Changed (Free Games window listens)
+            this.ReapplyTheme();
+        }
+
+        private void ReapplyTheme()
+        {
+            GhostTheme.Apply(this);
+            this._UnlockAllButton.ForeColor = GhostTheme.Accent;
+            this._UnlockSelectedButton.ForeColor = GhostTheme.Accent;
+            this._FreeGamesButton.ForeColor = GhostTheme.Accent;
+            this._StopUnlockButton.ForeColor = GhostTheme.Danger;
+            this._AddGameTextBox.BackColor = GhostTheme.Input;
+            this._AddGameTextBox.ForeColor = GhostTheme.Text;
+            this._SearchGameTextBox.BackColor = GhostTheme.Input;
+            this._SearchGameTextBox.ForeColor = GhostTheme.Text;
+            this._ThemeDarkItem.Checked = GhostTheme.Mode == GhostMode.Dark;
+            this._ThemeLightItem.Checked = GhostTheme.Mode == GhostMode.Light;
+            this.RebuildBlankLogo();
+            this.RefreshGames();
+        }
+
+        private void RebuildBlankLogo()
+        {
+            Bitmap blank = new(this._LogoImageList.ImageSize.Width, this._LogoImageList.ImageSize.Height);
+            using (var g = Graphics.FromImage(blank))
+            {
+                g.Clear(GhostTheme.SurfaceAlt);
+            }
+
+            if (this._LogoImageList.Images.Count == 0)
+            {
+                this._LogoImageList.Images.Add("Blank", blank);
+            }
+            else
+            {
+                this._LogoImageList.Images[0] = blank;
+            }
+        }
+
+        private void OnFreeGames(object sender, EventArgs e)
+        {
+            // non-modal: the main window stays usable while Free Games is open
+            if (this._freeGamesForm == null || this._freeGamesForm.IsDisposed == true)
+            {
+                this._freeGamesForm = new FreeGamesForm();
+                this._freeGamesForm.Show(this);
+            }
+            else
+            {
+                this._freeGamesForm.WindowState = FormWindowState.Normal;
+                this._freeGamesForm.Focus();
+            }
+        }
+
+        private void OnSortMode(object sender, EventArgs e)
+        {
+            SortMode mode;
+            if (sender == this._SortLockedFirstItem)
+            {
+                mode = SortMode.LockedFirst;
+            }
+            else if (sender == this._SortUnlockedFirstItem)
+            {
+                mode = SortMode.UnlockedFirst;
+            }
+            else
+            {
+                mode = SortMode.Name;
+            }
+
+            if (this._sortMode == mode)
+            {
+                return;
+            }
+
+            this._sortMode = mode;
+            this._SortNameItem.Checked = mode == SortMode.Name;
+            this._SortLockedFirstItem.Checked = mode == SortMode.LockedFirst;
+            this._SortUnlockedFirstItem.Checked = mode == SortMode.UnlockedFirst;
+            this.RefreshGames();
+        }
+
+        private static double ProgressRatioKey(GameInfo info, double unknownValue)
+        {
+            if (info.TotalAchievements <= 0 || info.UnlockedAchievements < 0)
+            {
+                return unknownValue;
+            }
+
+            return info.UnlockedAchievements / (double)info.TotalAchievements;
+        }
+
+        private void StartAchievementScan()
+        {
+            var steamPath = API.Steam.GetInstallPath();
+            if (string.IsNullOrEmpty(steamPath) == true)
+            {
+                return;
+            }
+
+            this._PickerStatusLabel.Text = Lang.T("picker.scanningAchievements");
+
+            uint accountId32 = 0;
+            try
+            {
+                accountId32 = (uint)(this._SteamClient.SteamUser.GetSteamId() & 0xFFFFFFFF);
+            }
+            catch
+            {
+                // fall back to unfiltered scan
+            }
+
+            uint accountId = accountId32;
+            Task.Run(() =>
+            {
+                var stats = AchievementStats.Scan(steamPath, accountId);
+                try
+                {
+                    this.BeginInvoke((Action)(() =>
+                    {
+                        foreach (var kv in stats)
+                        {
+                            if (this._Games.TryGetValue(kv.Key, out var info) == true)
+                            {
+                                info.TotalAchievements = kv.Value.Total;
+                                info.UnlockedAchievements = kv.Value.Unlocked;
+                            }
+                        }
+
+                        this.RefreshGames();
+                    }));
+                }
+                catch
+                {
+                    // form already closed
+                }
+            });
         }
 
         private void OnAppDataChanged(APITypes.AppDataChanged param)
@@ -98,7 +312,7 @@ namespace SAM.Picker
 
         private void DoDownloadList(object sender, DoWorkEventArgs e)
         {
-            this._PickerStatusLabel.Text = "Downloading game list...";
+            this._PickerStatusLabel.Text = Lang.T("picker.downloadingList");
 
             byte[] bytes;
             using (WebClient downloader = new())
@@ -123,7 +337,7 @@ namespace SAM.Picker
                 }
             }
 
-            this._PickerStatusLabel.Text = "Checking game ownership...";
+            this._PickerStatusLabel.Text = Lang.T("picker.checkingOwnership");
             foreach (var kv in pairs)
             {
                 this.AddGame(kv.Key, kv.Value);
@@ -141,6 +355,7 @@ namespace SAM.Picker
             this.RefreshGames();
             this._RefreshGamesButton.Enabled = true;
             this.DownloadNextLogo();
+            this.StartAchievementScan();
         }
 
         private void RefreshGames()
@@ -154,8 +369,8 @@ namespace SAM.Picker
             var wantMods = this._FilterModsMenuItem.Checked == true;
             var wantJunk = this._FilterJunkMenuItem.Checked == true;
 
-            this._FilteredGames.Clear();
-            foreach (var info in this._Games.Values.OrderBy(gi => gi.Name))
+            var filtered = new List<GameInfo>();
+            foreach (var info in this._Games.Values)
             {
                 if (nameSearch != null &&
                     info.Name.IndexOf(nameSearch, StringComparison.OrdinalIgnoreCase) < 0)
@@ -176,12 +391,30 @@ namespace SAM.Picker
                     continue;
                 }
 
-                this._FilteredGames.Add(info);
+                filtered.Add(info);
             }
 
+            IEnumerable<GameInfo> ordered = this._sortMode switch
+            {
+                SortMode.LockedFirst => filtered
+                    .OrderBy(gi => ProgressRatioKey(gi, double.MaxValue))
+                    .ThenBy(gi => gi.Name),
+                SortMode.UnlockedFirst => filtered
+                    .OrderByDescending(gi => ProgressRatioKey(gi, -1.0))
+                    .ThenBy(gi => gi.Name),
+                _ => filtered.OrderBy(gi => gi.Name),
+            };
+
+            this._FilteredGames.Clear();
+            this._FilteredGames.AddRange(ordered);
+
+            // reset to force item re-creation (label text / cell size refresh)
+            this._GameListView.VirtualListSize = 0;
             this._GameListView.VirtualListSize = this._FilteredGames.Count;
-            this._PickerStatusLabel.Text =
-                $"Displaying {this._GameListView.Items.Count} games. Total {this._Games.Count} games.";
+            this._PickerStatusLabel.Text = Lang.F(
+                "picker.displaying",
+                this._GameListView.Items.Count,
+                this._Games.Count);
 
             if (this._GameListView.Items.Count > 0)
             {
@@ -195,9 +428,24 @@ namespace SAM.Picker
             var info = this._FilteredGames[e.ItemIndex];
             e.Item = info.Item = new()
             {
-                Text = info.Name,
+                Text = FormatItemText(info),
                 ImageIndex = info.ImageIndex,
             };
+        }
+
+        /// <summary>Two-line label (name + achievement progress) so cells grow taller.</summary>
+        private static string FormatItemText(GameInfo info)
+        {
+            if (info.TotalAchievements <= 0)
+            {
+                return info.Name;
+            }
+
+            var unlocked = info.UnlockedAchievements >= 0
+                ? info.UnlockedAchievements.ToString(CultureInfo.InvariantCulture)
+                : "—";
+
+            return $"{info.Name}\n{unlocked}/{info.TotalAchievements}";
         }
 
         private void OnGameListViewSearchForVirtualItem(object sender, SearchForVirtualItemEventArgs e)
@@ -328,10 +576,20 @@ namespace SAM.Picker
                     break;
                 }
 
-                this._DownloadStatusLabel.Text = $"Downloading {1 + this._LogoQueue.Count} game icons...";
+                this._DownloadStatusLabel.Text = Lang.F("picker.downloadingIcons", 1 + this._LogoQueue.Count);
                 this._DownloadStatusLabel.Visible = true;
 
-                this._LogoWorker.RunWorkerAsync(info);
+                try
+                {
+                    this._LogoWorker.RunWorkerAsync(info);
+                }
+                catch (InvalidOperationException)
+                {
+                    // rare race: the worker is still finishing its previous job —
+                    // requeue; the next completion pass will pick it up again
+                    this._LogosAttempting.Remove(info.ImageUrl);
+                    this._LogoQueue.Enqueue(info);
+                }
             }
         }
 
@@ -485,14 +743,14 @@ namespace SAM.Picker
 
             if (games.Count == 0)
             {
-                MessageBox.Show(this, "No games found.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(this, Lang.T("unlock.none"), Lang.T("unlock.info"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
             var result = MessageBox.Show(
                 this,
-                $"Unlock ALL achievements for {games.Count} games?\n\nThis may take a while and cannot be undone.",
-                "Confirm Unlock All",
+                Lang.F("unlock.confirmAll", games.Count, EstimateUnlockDuration(games.Count)),
+                Lang.T("unlock.confirmAllTitle"),
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning);
             if (result != DialogResult.Yes)
@@ -500,9 +758,7 @@ namespace SAM.Picker
                 return;
             }
 
-            this._UnlockAllButton.Enabled = false;
-            this._UnlockSelectedButton.Enabled = false;
-            this._UnlockWorker.RunWorkerAsync(games);
+            this.BeginUnlockRun(games);
         }
 
         private void OnUnlockSelected(object sender, EventArgs e)
@@ -533,14 +789,14 @@ namespace SAM.Picker
 
             if (games.Count == 0)
             {
-                MessageBox.Show(this, "Select one or more games first (Ctrl+Click).", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(this, Lang.T("unlock.selectFirst"), Lang.T("unlock.info"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
             var result = MessageBox.Show(
                 this,
-                $"Unlock ALL achievements for {games.Count} selected game(s)?\n\nThis cannot be undone.",
-                "Confirm Unlock Selected",
+                Lang.F("unlock.confirmSelected", games.Count, EstimateUnlockDuration(games.Count)),
+                Lang.T("unlock.confirmSelectedTitle"),
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning);
             if (result != DialogResult.Yes)
@@ -548,20 +804,81 @@ namespace SAM.Picker
                 return;
             }
 
+            this.BeginUnlockRun(games);
+        }
+
+        private void BeginUnlockRun(List<GameInfo> games)
+        {
+            this._unlockCompletedCount = 0;
+            this._unlockTotalCount = games.Count;
+            this._unlockPauseEvent.Set();
+            this._PauseUnlockButton.Text = Lang.T("picker.pause");
+            this._PauseUnlockButton.Enabled = true;
+            this._StopUnlockButton.Enabled = true;
             this._UnlockAllButton.Enabled = false;
             this._UnlockSelectedButton.Enabled = false;
             this._UnlockWorker.RunWorkerAsync(games);
         }
 
+        private void OnPauseUnlock(object sender, EventArgs e)
+        {
+            if (this._unlockPauseEvent.IsSet == true)
+            {
+                this._unlockPauseEvent.Reset();
+                this._PauseUnlockButton.Text = Lang.T("picker.resume");
+                this._PickerStatusLabel.Text = Lang.T("picker.paused");
+            }
+            else
+            {
+                this._unlockPauseEvent.Set();
+                this._PauseUnlockButton.Text = Lang.T("picker.pause");
+            }
+        }
+
+        private void OnStopUnlock(object sender, EventArgs e)
+        {
+            // release a possible pause first so the worker can observe the cancel
+            this._unlockPauseEvent.Set();
+            this._UnlockWorker.CancelAsync();
+        }
+
+        /// <summary>Rough upfront estimate for unlocking (per-game process spawn + stats roundtrip).</summary>
+        private static string EstimateUnlockDuration(int gameCount)
+        {
+            return Lang.FormatDuration(TimeSpan.FromSeconds(gameCount * 8.0));
+        }
+
         private void DoUnlock(object sender, DoWorkEventArgs e)
         {
             List<GameInfo> games = (List<GameInfo>)e.Argument;
+            var itemTimes = new List<double>();
 
             for (int i = 0; i < games.Count; i++)
             {
-                var game = games[i];
-                this._UnlockWorker.ReportProgress(i * 100 / games.Count, $"[{i + 1}/{games.Count}] Unlocking: {game.Name}");
+                // honor pause/stop between games
+                this._unlockPauseEvent.Wait();
+                if (this._UnlockWorker.CancellationPending == true)
+                {
+                    e.Cancel = true;
+                    return;
+                }
 
+                var game = games[i];
+
+                string text;
+                if (itemTimes.Count > 0)
+                {
+                    var remaining = TimeSpan.FromSeconds(itemTimes.Average() * (games.Count - i));
+                    text = Lang.F("unlock.progressEta", i + 1, games.Count, game.Name, Lang.FormatDuration(remaining));
+                }
+                else
+                {
+                    text = Lang.F("unlock.progress", i + 1, games.Count, game.Name);
+                }
+
+                this._UnlockWorker.ReportProgress(i * 100 / games.Count, text);
+
+                var itemWatch = Stopwatch.StartNew();
                 try
                 {
                     using (Process process = new())
@@ -580,11 +897,19 @@ namespace SAM.Picker
                 }
                 catch (Exception ex)
                 {
-                    this._UnlockWorker.ReportProgress(i * 100 / games.Count, $"[{i + 1}/{games.Count}] Failed to start for: {game.Name} ({ex.Message})");
+                    this._UnlockWorker.ReportProgress(
+                        i * 100 / games.Count,
+                        Lang.F("unlock.failedStart", i + 1, games.Count, game.Name, ex.Message));
+                }
+                finally
+                {
+                    itemWatch.Stop();
+                    itemTimes.Add(itemWatch.Elapsed.TotalSeconds);
+                    this._unlockCompletedCount++;
                 }
             }
 
-            this._UnlockWorker.ReportProgress(100, $"Done. Unlocked achievements for {games.Count} games.");
+            this._UnlockWorker.ReportProgress(100, Lang.F("unlock.done", games.Count));
         }
 
         private void OnUnlockProgress(object sender, ProgressChangedEventArgs e)
@@ -599,6 +924,10 @@ namespace SAM.Picker
         {
             this._UnlockAllButton.Enabled = true;
             this._UnlockSelectedButton.Enabled = true;
+            this._PauseUnlockButton.Enabled = false;
+            this._StopUnlockButton.Enabled = false;
+            this._unlockPauseEvent.Set();
+            this._PauseUnlockButton.Text = Lang.T("picker.pause");
 
             if (e.Error != null)
             {
@@ -606,14 +935,28 @@ namespace SAM.Picker
                 return;
             }
 
+            if (e.Cancelled == true)
+            {
+                MessageBox.Show(
+                    this,
+                    Lang.F("unlock.cancelled", this._unlockCompletedCount, this._unlockTotalCount),
+                    Lang.T("unlock.info"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+                this.RefreshGames();
+                this.StartAchievementScan();
+                return;
+            }
+
             MessageBox.Show(
                 this,
-                "Unlock process finished.\nDetails: SAM_AutoUnlock.log",
-                "Done",
+                Lang.T("unlock.doneBody"),
+                Lang.T("unlock.doneTitle"),
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
 
             this.RefreshGames();
+            this.StartAchievementScan(); // pick up the freshly unlocked counts
         }
 
         private void OnAddGame(object sender, EventArgs e)
@@ -661,7 +1004,7 @@ namespace SAM.Picker
 
         private void OnGameListViewDrawItem(object sender, DrawListViewItemEventArgs e)
         {
-            e.DrawDefault = true;
+            e.DrawDefault = false;
 
             if (e.Item.Bounds.IntersectsWith(this._GameListView.ClientRectangle) == false)
             {
@@ -669,6 +1012,78 @@ namespace SAM.Picker
             }
 
             var info = this._FilteredGames[e.ItemIndex];
+            var bounds = e.Bounds;
+            bool selected = e.Item.Selected;
+
+            // ghost theme tile: dark cell, capsule art on top, name below
+            using (var brush = new SolidBrush(selected == true ? GhostTheme.AccentDark : GhostTheme.Background))
+            {
+                e.Graphics.FillRectangle(brush, bounds);
+            }
+
+            int imageWidth = this._LogoImageList.ImageSize.Width;
+            int imageHeight = this._LogoImageList.ImageSize.Height;
+            int imageX = bounds.Left + Math.Max(0, (bounds.Width - imageWidth) / 2);
+            int imageY = bounds.Top + 2;
+
+            if (info.ImageIndex > 0 && info.ImageIndex < this._LogoImageList.Images.Count)
+            {
+                this._LogoImageList.Draw(e.Graphics, imageX, imageY, imageWidth, imageHeight, info.ImageIndex);
+            }
+            else
+            {
+                using (var brush = new SolidBrush(GhostTheme.SurfaceAlt))
+                {
+                    e.Graphics.FillRectangle(brush, imageX, imageY, imageWidth, imageHeight);
+                }
+            }
+
+            if (bounds.Height > imageHeight + 20)
+            {
+                var nameRect = new Rectangle(
+                    bounds.Left + 2,
+                    imageY + imageHeight + 1,
+                    bounds.Width - 4,
+                    16);
+                TextRenderer.DrawText(
+                    e.Graphics,
+                    info.Name,
+                    this.Font,
+                    nameRect,
+                    selected == true ? GhostTheme.Text : GhostTheme.TextMuted,
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix);
+
+                if (info.TotalAchievements > 0 && bounds.Height > imageHeight + 36)
+                {
+                    var unlocked = info.UnlockedAchievements >= 0
+                        ? info.UnlockedAchievements.ToString(CultureInfo.InvariantCulture)
+                        : "—";
+                    var progressColor = info.UnlockedAchievements == info.TotalAchievements
+                        ? GhostTheme.Accent
+                        : selected == true ? GhostTheme.Text : GhostTheme.TextMuted;
+                    var progressRect = new Rectangle(
+                        bounds.Left + 2,
+                        imageY + imageHeight + 17,
+                        bounds.Width - 4,
+                        15);
+                    TextRenderer.DrawText(
+                        e.Graphics,
+                        unlocked + "/" + info.TotalAchievements.ToString(CultureInfo.InvariantCulture),
+                        this.Font,
+                        progressRect,
+                        progressColor,
+                        TextFormatFlags.HorizontalCenter | TextFormatFlags.NoPrefix);
+                }
+            }
+
+            if (selected == true)
+            {
+                using (var pen = new Pen(GhostTheme.Accent, 1.5f))
+                {
+                    e.Graphics.DrawRectangle(pen, bounds.Left, bounds.Top, bounds.Width - 1, bounds.Height - 1);
+                }
+            }
+
             if (info.ImageIndex <= 0)
             {
                 this.AddGameToLogoQueue(info);

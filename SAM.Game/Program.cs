@@ -28,6 +28,35 @@ namespace SAM.Game
 {
     internal static class Program
     {
+        /// <summary>Reads the theme choice saved by the picker (%APPDATA%\SAM-Auto\settings.ini).</summary>
+        private static void ApplySavedTheme()
+        {
+            try
+            {
+                var ini = System.IO.Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "SAM-Auto",
+                    "settings.ini");
+                if (System.IO.File.Exists(ini) == false)
+                {
+                    return;
+                }
+
+                foreach (var line in System.IO.File.ReadAllLines(ini))
+                {
+                    if (string.Equals(line.Trim(), "theme=light", StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        Common.GhostTheme.SetMode(Common.GhostMode.Light);
+                        return;
+                    }
+                }
+            }
+            catch
+            {
+                // default dark theme on any failure
+            }
+        }
+
         [STAThread]
         public static void Main(string[] args)
         {
@@ -114,6 +143,7 @@ namespace SAM.Game
                     return;
                 }
 
+                ApplySavedTheme();
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.Run(new Manager(appId, client));

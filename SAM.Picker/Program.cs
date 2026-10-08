@@ -77,6 +77,8 @@ namespace SAM.Picker
                     return;
                 }
 
+                Lang.Load();
+                Common.GhostTheme.SetMode(Lang.Theme == "light" ? Common.GhostMode.Light : Common.GhostMode.Dark);
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.Run(new GamePicker(client));

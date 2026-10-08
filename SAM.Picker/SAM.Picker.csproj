@@ -4,19 +4,19 @@
     <Company>Gibbed</Company>
     <Authors>Gibbed</Authors>
     <Description>A game picker for the Steam Achievement Manager.</Description>
-    <Copyright>Copyright © Gibbed 2019</Copyright>
+    <Copyright>Copyright ï¿½ Gibbed 2019</Copyright>
   </PropertyGroup>
   <PropertyGroup>
-    <Version>8.0.0</Version>
-    <AssemblyVersion>8.0.0.0</AssemblyVersion>
-    <FileVersion>8.0.0.0</FileVersion>
+    <Version>9.0.0</Version>
+    <AssemblyVersion>9.0.0.0</AssemblyVersion>
+    <FileVersion>9.0.0.0</FileVersion>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>SAM.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <PropertyGroup>
-    <RepositoryUrl>https://github.com/gibbed/SteamAchievementManager/</RepositoryUrl>
+    <RepositoryUrl>https://github.com/lazhayalet/SteamAchievementManager-Auto/</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
   </PropertyGroup>
   <PropertyGroup>
@@ -34,7 +34,27 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="System.Security" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="QRCoder" Version="1.6.0" />
+    <PackageReference Include="SteamKit2" Version="2.5.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\SAM.Common\GhostTheme.cs">
+      <Link>GhostTheme.cs</Link>
+    </Compile>
+    <Compile Include="..\SAM.Game\KeyValue.cs">
+      <Link>KeyValue.cs</Link>
+    </Compile>
+    <Compile Include="..\SAM.Game\KeyValueType.cs">
+      <Link>KeyValueType.cs</Link>
+    </Compile>
+    <Compile Include="..\SAM.Game\StreamHelpers.cs">
+      <Link>StreamHelpers.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Compile Update="MyListView.cs">

@@ -42,7 +42,7 @@
             this._GameStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this._DownloadStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this._CallbackTimer = new System.Windows.Forms.Timer(this.components);
-            this._MainTabControl = new System.Windows.Forms.TabControl();
+            this._MainTabControl = new SAM.Common.GhostTabControl();
             this._AchievementsTabPage = new System.Windows.Forms.TabPage();
             this._AchievementListView = new SAM.Game.DoubleBufferedListView();
             this._AchievementNameColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -205,7 +205,7 @@
             this._AchievementListView.Dock = System.Windows.Forms.DockStyle.Fill;
             this._AchievementListView.ForeColor = System.Drawing.Color.White;
             this._AchievementListView.FullRowSelect = true;
-            this._AchievementListView.GridLines = true;
+            this._AchievementListView.GridLines = false;
             this._AchievementListView.HideSelection = false;
             this._AchievementListView.LargeImageList = this._AchievementImageList;
             this._AchievementListView.Location = new System.Drawing.Point(3, 28);
@@ -378,7 +378,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(640, 50);
             this.Name = "Manager";
-            this.Text = "Steam Achievement Manager Auto 8.0";
+            this.Text = "Steam Achievement Manager Auto 9.0";
             this._MainToolStrip.ResumeLayout(false);
             this._MainToolStrip.PerformLayout();
             this._MainStatusStrip.ResumeLayout(false);
@@ -406,7 +406,7 @@
         private System.Windows.Forms.ToolStripStatusLabel _GameStatusLabel;
         private System.Windows.Forms.ImageList _AchievementImageList;
         private System.Windows.Forms.Timer _CallbackTimer;
-        private System.Windows.Forms.TabControl _MainTabControl;
+        private SAM.Common.GhostTabControl _MainTabControl;
         private System.Windows.Forms.TabPage _AchievementsTabPage;
         private System.Windows.Forms.TabPage _StatisticsTabPage;
         private DoubleBufferedListView _AchievementListView;

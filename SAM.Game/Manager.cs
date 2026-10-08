@@ -56,6 +56,8 @@ namespace SAM.Game
         {
             this.InitializeComponent();
 
+            SAM.Common.GhostTheme.Apply(this);
+
             this._MainTabControl.SelectedTab = this._AchievementsTabPage;
             //this.statisticsList.Enabled = this.checkBox1.Checked;
 
@@ -882,7 +884,7 @@ namespace SAM.Game
             {
                 MessageBox.Show(
                     this,
-                    "Sorry, but this is a protected achievement and cannot be managed with Steam Achievement Manager.",
+                    "Sorry, but this is a protected achievement and cannot be managed with Steam Achievement Manager Auto.",
                     "Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);

@@ -40,6 +40,19 @@
             this._AddGameButton = new System.Windows.Forms.ToolStripButton();
             this._UnlockAllButton = new System.Windows.Forms.ToolStripButton();
             this._UnlockSelectedButton = new System.Windows.Forms.ToolStripButton();
+            this._FreeGamesButton = new System.Windows.Forms.ToolStripButton();
+            this._PauseUnlockButton = new System.Windows.Forms.ToolStripButton();
+            this._StopUnlockButton = new System.Windows.Forms.ToolStripButton();
+            this._SortDropDown = new System.Windows.Forms.ToolStripDropDownButton();
+            this._SortNameItem = new System.Windows.Forms.ToolStripMenuItem();
+            this._SortLockedFirstItem = new System.Windows.Forms.ToolStripMenuItem();
+            this._SortUnlockedFirstItem = new System.Windows.Forms.ToolStripMenuItem();
+            this._LanguageDropDown = new System.Windows.Forms.ToolStripDropDownButton();
+            this._LangTurkishItem = new System.Windows.Forms.ToolStripMenuItem();
+            this._LangEnglishItem = new System.Windows.Forms.ToolStripMenuItem();
+            this._ThemeDropDown = new System.Windows.Forms.ToolStripDropDownButton();
+            this._ThemeDarkItem = new System.Windows.Forms.ToolStripMenuItem();
+            this._ThemeLightItem = new System.Windows.Forms.ToolStripMenuItem();
             this._FindGamesLabel = new System.Windows.Forms.ToolStripLabel();
             this._SearchGameTextBox = new System.Windows.Forms.ToolStripTextBox();
             this._FilterDropDownButton = new System.Windows.Forms.ToolStripDropDownButton();
@@ -90,10 +103,16 @@
             this._AddGameButton,
             this._UnlockAllButton,
             this._UnlockSelectedButton,
+            this._FreeGamesButton,
+            this._PauseUnlockButton,
+            this._StopUnlockButton,
             _ToolStripSeparator2,
             this._FindGamesLabel,
             this._SearchGameTextBox,
-            this._FilterDropDownButton});
+            this._FilterDropDownButton,
+            this._SortDropDown,
+            this._LanguageDropDown,
+            this._ThemeDropDown});
             this._PickerToolStrip.Location = new System.Drawing.Point(0, 0);
             this._PickerToolStrip.Name = "_PickerToolStrip";
             this._PickerToolStrip.Size = new System.Drawing.Size(742, 25);
@@ -141,6 +160,120 @@
             this._UnlockSelectedButton.Size = new System.Drawing.Size(120, 22);
             this._UnlockSelectedButton.Text = "Unlock Selected";
             this._UnlockSelectedButton.Click += new System.EventHandler(this.OnUnlockSelected);
+            //
+            // _FreeGamesButton
+            //
+            this._FreeGamesButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this._FreeGamesButton.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this._FreeGamesButton.ForeColor = System.Drawing.Color.FromArgb(0x5F, 0xEA, 0xD4);
+            this._FreeGamesButton.Name = "_FreeGamesButton";
+            this._FreeGamesButton.Size = new System.Drawing.Size(85, 22);
+            this._FreeGamesButton.Text = "👻 Free Games";
+            this._FreeGamesButton.Click += new System.EventHandler(this.OnFreeGames);
+            //
+            // _PauseUnlockButton
+            //
+            this._PauseUnlockButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this._PauseUnlockButton.Enabled = false;
+            this._PauseUnlockButton.Name = "_PauseUnlockButton";
+            this._PauseUnlockButton.Size = new System.Drawing.Size(60, 22);
+            this._PauseUnlockButton.Text = "⏸ Pause";
+            this._PauseUnlockButton.Click += new System.EventHandler(this.OnPauseUnlock);
+            //
+            // _StopUnlockButton
+            //
+            this._StopUnlockButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this._StopUnlockButton.Enabled = false;
+            this._StopUnlockButton.ForeColor = System.Drawing.Color.FromArgb(0xF8, 0x71, 0x71);
+            this._StopUnlockButton.Name = "_StopUnlockButton";
+            this._StopUnlockButton.Size = new System.Drawing.Size(50, 22);
+            this._StopUnlockButton.Text = "⏹ Stop";
+            this._StopUnlockButton.Click += new System.EventHandler(this.OnStopUnlock);
+            //
+            // _SortDropDown
+            //
+            this._SortDropDown.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this._SortDropDown.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this._SortNameItem,
+            this._SortLockedFirstItem,
+            this._SortUnlockedFirstItem});
+            this._SortDropDown.Name = "_SortDropDown";
+            this._SortDropDown.Size = new System.Drawing.Size(50, 22);
+            this._SortDropDown.Text = "⇅ Sort";
+            this._SortDropDown.ToolTipText = "Sort games";
+            //
+            // _SortNameItem
+            //
+            this._SortNameItem.Checked = true;
+            this._SortNameItem.Name = "_SortNameItem";
+            this._SortNameItem.Size = new System.Drawing.Size(160, 22);
+            this._SortNameItem.Text = "By name";
+            this._SortNameItem.Click += new System.EventHandler(this.OnSortMode);
+            //
+            // _SortLockedFirstItem
+            //
+            this._SortLockedFirstItem.Name = "_SortLockedFirstItem";
+            this._SortLockedFirstItem.Size = new System.Drawing.Size(160, 22);
+            this._SortLockedFirstItem.Text = "Locked first";
+            this._SortLockedFirstItem.Click += new System.EventHandler(this.OnSortMode);
+            //
+            // _SortUnlockedFirstItem
+            //
+            this._SortUnlockedFirstItem.Name = "_SortUnlockedFirstItem";
+            this._SortUnlockedFirstItem.Size = new System.Drawing.Size(160, 22);
+            this._SortUnlockedFirstItem.Text = "Unlocked first";
+            this._SortUnlockedFirstItem.Click += new System.EventHandler(this.OnSortMode);
+            //
+            // _LanguageDropDown
+            //
+            this._LanguageDropDown.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this._LanguageDropDown.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this._LangTurkishItem,
+            this._LangEnglishItem});
+            this._LanguageDropDown.Name = "_LanguageDropDown";
+            this._LanguageDropDown.Size = new System.Drawing.Size(40, 22);
+            this._LanguageDropDown.Text = "🌐";
+            this._LanguageDropDown.ToolTipText = "Language / Dil";
+            //
+            // _LangTurkishItem
+            //
+            this._LangTurkishItem.Name = "_LangTurkishItem";
+            this._LangTurkishItem.Size = new System.Drawing.Size(120, 22);
+            this._LangTurkishItem.Text = "Türkçe";
+            this._LangTurkishItem.Click += new System.EventHandler(this.OnLangTurkish);
+            //
+            // _LangEnglishItem
+            //
+            this._LangEnglishItem.Name = "_LangEnglishItem";
+            this._LangEnglishItem.Size = new System.Drawing.Size(120, 22);
+            this._LangEnglishItem.Text = "English";
+            this._LangEnglishItem.Click += new System.EventHandler(this.OnLangEnglish);
+            //
+            // _ThemeDropDown
+            //
+            this._ThemeDropDown.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this._ThemeDropDown.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this._ThemeDarkItem,
+            this._ThemeLightItem});
+            this._ThemeDropDown.Name = "_ThemeDropDown";
+            this._ThemeDropDown.Size = new System.Drawing.Size(55, 22);
+            this._ThemeDropDown.Text = "🎨 Tema";
+            this._ThemeDropDown.ToolTipText = "Theme / Tema";
+            //
+            // _ThemeDarkItem
+            //
+            this._ThemeDarkItem.Checked = true;
+            this._ThemeDarkItem.Name = "_ThemeDarkItem";
+            this._ThemeDarkItem.Size = new System.Drawing.Size(160, 22);
+            this._ThemeDarkItem.Text = "Koyu (Hayalet)";
+            this._ThemeDarkItem.Click += new System.EventHandler(this.OnThemeDark);
+            //
+            // _ThemeLightItem
+            //
+            this._ThemeLightItem.Name = "_ThemeLightItem";
+            this._ThemeLightItem.Size = new System.Drawing.Size(160, 22);
+            this._ThemeLightItem.Text = "Açık";
+            this._ThemeLightItem.Click += new System.EventHandler(this.OnThemeLight);
             //
             // _FindGamesLabel
             //
@@ -266,7 +399,7 @@
             //
             // _UnlockWorker
             //
-            this._UnlockWorker.WorkerSupportsCancellation = false;
+            this._UnlockWorker.WorkerSupportsCancellation = true;
             this._UnlockWorker.WorkerReportsProgress = true;
             this._UnlockWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.DoUnlock);
             this._UnlockWorker.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.OnUnlockProgress);
@@ -276,13 +409,13 @@
             //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(742, 292);
+            this.ClientSize = new System.Drawing.Size(980, 560);
             this.Controls.Add(this._GameListView);
             this.Controls.Add(this._PickerStatusStrip);
             this.Controls.Add(this._PickerToolStrip);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "GamePicker";
-            this.Text = "Steam Achievement Manager Auto 8.0 | Pick a game... Any game...";
+            this.Text = "Steam Achievement Manager Auto 9.0 | Pick a game... Any game...";
             this._PickerToolStrip.ResumeLayout(false);
             this._PickerToolStrip.PerformLayout();
             this._PickerStatusStrip.ResumeLayout(false);
@@ -296,6 +429,19 @@
         private System.Windows.Forms.Timer _CallbackTimer;
         private System.Windows.Forms.ToolStripButton _UnlockAllButton;
         private System.Windows.Forms.ToolStripButton _UnlockSelectedButton;
+        private System.Windows.Forms.ToolStripButton _FreeGamesButton;
+        private System.Windows.Forms.ToolStripButton _PauseUnlockButton;
+        private System.Windows.Forms.ToolStripButton _StopUnlockButton;
+        private System.Windows.Forms.ToolStripDropDownButton _SortDropDown;
+        private System.Windows.Forms.ToolStripMenuItem _SortNameItem;
+        private System.Windows.Forms.ToolStripMenuItem _SortLockedFirstItem;
+        private System.Windows.Forms.ToolStripMenuItem _SortUnlockedFirstItem;
+        private System.Windows.Forms.ToolStripDropDownButton _LanguageDropDown;
+        private System.Windows.Forms.ToolStripMenuItem _LangTurkishItem;
+        private System.Windows.Forms.ToolStripMenuItem _LangEnglishItem;
+        private System.Windows.Forms.ToolStripDropDownButton _ThemeDropDown;
+        private System.Windows.Forms.ToolStripMenuItem _ThemeDarkItem;
+        private System.Windows.Forms.ToolStripMenuItem _ThemeLightItem;
         private System.ComponentModel.BackgroundWorker _UnlockWorker;
         private System.Windows.Forms.ToolStrip _PickerToolStrip;
         private System.Windows.Forms.ToolStripButton _RefreshGamesButton;
