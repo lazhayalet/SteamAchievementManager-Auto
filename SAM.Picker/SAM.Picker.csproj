@@ -3,7 +3,7 @@
     <AssemblyTitle>Steam Achievement Manager Auto Picker</AssemblyTitle>
     <Company>Gibbed</Company>
     <Authors>Gibbed</Authors>
-    <Description>A game picker for the Steam Achievement Manager.</Description>
+    <Description>A game picker for the Steam Achievement Manager Auto — bulk unlock, free games, ghost theme.</Description>
     <Copyright>Copyright � Gibbed 2019</Copyright>
   </PropertyGroup>
   <PropertyGroup>
