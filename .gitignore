@@ -389,3 +389,6 @@ FodyWeavers.xsd
 # JetBrains Rider
 .idea/
 *.sln.iml
+
+# Release packages
+SAM-Auto-*.zip
