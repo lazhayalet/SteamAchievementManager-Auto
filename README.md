@@ -21,6 +21,16 @@ Hazır paketi **Releases** sayfasından indirin / Grab the ready-to-run package 
 
 ---
 
+## 📸 Ekran Görüntüleri / Screenshots
+
+| 👻 Hayalet (Koyu) Tema / Ghost (Dark) Theme | ☀️ Açık Tema / Light Theme |
+|:---:|:---:|
+| ![Ghost (dark) theme](docs/screenshots/picker-dark.png) | ![Light theme](docs/screenshots/picker-light.png) |
+| 🎁 Bedava Oyunlar / Free Games | 🏆 Başarı Yöneticisi / Achievement Manager |
+| ![Free Games window](docs/screenshots/freegames-dark.png) | ![Achievement Manager](docs/screenshots/manager-dark.png) |
+
+---
+
 ## 🇹🇷 Türkçe
 
 Steam Achievement Manager Auto (SAM Auto 9.0), Steam'deki başarıları ve istatistikleri yönetmek için hafif, taşınabilir bir araçtır. **Steam istemcisi açık olmalı ve giriş yapılmış olmalıdır** (Bedava Oyunlar özelliği için gerekmez, aşağıya bakın).
