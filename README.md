@@ -73,7 +73,7 @@ Steam Achievement Manager Auto (SAM Auto 9.0), Steam'deki başarıları ve istat
 
 Bu özellik kendi bağımsız Steam ağ bağlantısını kullanır (SteamKit2); Steam istemcisinin açık olması şart değildir.
 
-### Kurulum / Build
+### Kurulum
 
 Gereksinim: Windows üzerinde [.NET 8 SDK](https://dotnet.microsoft.com/download) (derleme için) + çalıştırma için .NET Framework 4.8.
 
@@ -82,6 +82,52 @@ dotnet build SAM.sln -c Release -p:Platform=x86
 ```
 
 Çalıştırılabilir dosyalar `upload` klasöründe oluşur. .NET Framework 4.8 referansları `Directory.Build.props` ile otomatik yüklenir.
+
+### ⚖️ Karşılaştırma: Orijinal SAM (gibbed) vs SAM Auto 9.0
+
+**Toplu İşlemler**
+
+| Özellik | Orijinal SAM | SAM Auto 9.0 |
+|:---|:---:|:---:|
+| Kütüphanedeki tüm oyunları tek tıkla açma | ❌ | ✅ Unlock All |
+| Seçili oyunları toplu açma | ❌ | ✅ Unlock Selected |
+| Duraklat / devam et / durdur | ❌ | ✅ ⏸️⏹️ |
+| Onay penceresinde tahmini süre | ❌ | ✅ |
+| Çalışırken canlı kalan süre (durum çubuğu) | ❌ | ✅ |
+
+**Başarı Bilgisi**
+
+| Özellik | Orijinal SAM | SAM Auto 9.0 |
+|:---|:---:|:---:|
+| Oyun kartında açılan/toplam başarı sayısı | ❌ | ✅ yerel önbellekten, anlık |
+| Açılma durumuna göre sıralama | ❌ | ✅ açılmamış/açılmış önce |
+| Çok hesaplı PC'de oturumdaki hesaba göre filtre | ❌ | ✅ |
+
+**Bedava İçerikler**
+
+| Özellik | Orijinal SAM | SAM Auto 9.0 |
+|:---|:---:|:---:|
+| Bedava oyun/DLC/yazılım/demo/mod ekleme | ❌ | ✅ 👻 Free Games |
+| Kategori seçimi | ❌ | ✅ 6 kategori |
+| %100 indirim fırsatları | ❌ | ✅ mağaza checkout ile |
+| Şifresiz QR girişi (Steam mobil uygulaması) | ❌ | ✅ + DPAPI ile şifreli oturum |
+| Valve hız limitinde otomatik bekleme + devam | ❌ | ✅ ~50 lisans/saat |
+| Liste önbelleği | ❌ | ✅ 12 saat |
+
+**Görünüm**
+
+| Özellik | Orijinal SAM | SAM Auto 9.0 |
+|:---|:---:|:---:|
+| Koyu (hayalet) tema | ❌ | ✅ |
+| Açık tema seçeneği, anında geçiş | ❌ | ✅ 🎨 |
+| Koyu başlık çubuğu ve koyu liste başlıkları | ❌ | ✅ |
+
+**Dil**
+
+| Özellik | Orijinal SAM | SAM Auto 9.0 |
+|:---|:---:|:---:|
+| Türkçe arayüz | ❌ | ✅ |
+| Araç çubuğundan anında dil değiştirme | ❌ | ✅ 🌐 TR/EN |
 
 ---
 
@@ -136,6 +182,52 @@ dotnet build SAM.sln -c Release -p:Platform=x86
 ```
 
 The binaries are written to the `upload` folder. .NET Framework 4.8 reference assemblies are restored automatically via `Directory.Build.props`.
+
+### ⚖️ Comparison: Original SAM (gibbed) vs SAM Auto 9.0
+
+**Bulk Operations**
+
+| Feature | Original SAM | SAM Auto 9.0 |
+|:---|:---:|:---:|
+| One-click unlock for the whole library | ❌ | ✅ Unlock All |
+| Bulk unlock for selected games | ❌ | ✅ Unlock Selected |
+| Pause / resume / stop | ❌ | ✅ ⏸️⏹️ |
+| Estimated time in confirmation dialog | ❌ | ✅ |
+| Live remaining time in status bar | ❌ | ✅ |
+
+**Achievement Info**
+
+| Feature | Original SAM | SAM Auto 9.0 |
+|:---|:---:|:---:|
+| Unlocked/total count on game cards | ❌ | ✅ instant, from local cache |
+| Sort by unlock state | ❌ | ✅ locked/unlocked first |
+| Per-account filtering on shared PCs | ❌ | ✅ |
+
+**Free Content**
+
+| Feature | Original SAM | SAM Auto 9.0 |
+|:---|:---:|:---:|
+| Claim free games/DLC/software/demos/mods | ❌ | ✅ 👻 Free Games |
+| Category selection | ❌ | ✅ 6 categories |
+| 100%-off deals | ❌ | ✅ via store checkout |
+| Passwordless QR sign-in (Steam mobile app) | ❌ | ✅ + DPAPI-encrypted session |
+| Auto wait + resume on Valve rate limit | ❌ | ✅ ~50 licenses/hour |
+| List cache | ❌ | ✅ 12 hours |
+
+**Appearance**
+
+| Feature | Original SAM | SAM Auto 9.0 |
+|:---|:---:|:---:|
+| Dark (ghost) theme | ❌ | ✅ |
+| Light theme option, instant switch | ❌ | ✅ 🎨 |
+| Dark title bar and dark list headers | ❌ | ✅ |
+
+**Language**
+
+| Feature | Original SAM | SAM Auto 9.0 |
+|:---|:---:|:---:|
+| Turkish UI | ❌ | ✅ |
+| Instant language switch from toolbar | ❌ | ✅ 🌐 TR/EN |
 
 ---
 
